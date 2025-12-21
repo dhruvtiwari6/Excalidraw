@@ -20,5 +20,9 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@types/dotenv": "^6.1.1",
+    "dotenv": "^17.2.3"
+  }
 }
