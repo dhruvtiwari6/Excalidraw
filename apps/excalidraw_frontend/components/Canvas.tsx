@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import CanvasRoom from "./CanvasRoom";
 import { Shape } from "@/app/draw";
 import axios from "axios";
+import { useNotifications } from "@/app/hooks/useNotifications";
 
 type JoinResult = {
   success: boolean;
@@ -32,11 +33,8 @@ export default function Canvas({
   const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Admin-only: incoming join request
-  const [joinRequest, setJoinRequest] = useState<{
-    roomId: number;
-    userId: number;
-  } | null>(null);
+  // Use notification system instead of local state
+  const { addRequest } = useNotifications();
 
   // 🔹 SEND JOIN REQUEST
   useEffect(() => {
@@ -93,17 +91,20 @@ export default function Canvas({
     };
   }, [socket]);
 
-  // 🔹 ADMIN: RECEIVE JOIN REQUEST
+  // 🔹 ADMIN: RECEIVE JOIN REQUEST - Add to notification system
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("room:join:request", (data) => {
-      setJoinRequest(data);
+    socket.on("room:join:request", (data: { roomId: number; userId: number }) => {
+      // Only add to notifications if user is admin of this room
+      if (admin_of_room === userId_want_to_join) {
+        addRequest(data);
+      }
     });
     return () => {
       socket.off("room:join:request");
     };
-  }, [socket]);
+  }, [socket, admin_of_room, userId_want_to_join, addRequest]);
 
   // 🔹 FETCH SHAPES AFTER JOIN
   useEffect(() => {
@@ -112,7 +113,7 @@ export default function Canvas({
     async function fetchShapes() {
       try {
         setGettingShapes(true);
-        const res = await axios.get(
+        const res = await axios.get<{ data?: Shape[] }>(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/room/chats/${roomId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -138,53 +139,10 @@ export default function Canvas({
   if (!joined || gettingShapes) return <div>Joining room…</div>;
 
   return (
-    <>
-      {/* 🔹 ADMIN APPROVAL MODAL */}
-      {joinRequest && admin_of_room === userId_want_to_join && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded shadow">
-            <p>User {joinRequest.userId} wants to join</p>
-
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  console.log("Sending room:join:response", {
-                    ...joinRequest,
-                    approved: true,
-                  });
-
-                  socket.emit("room:join:response", {
-                    ...joinRequest,
-                    approved: true,
-                  });
-                  setJoinRequest(null);
-                }}
-              >
-                Allow
-              </button>
-
-              <button
-                onClick={() => {
-                  socket.emit("room:join:response", {
-                    ...joinRequest,
-                    approved: false,
-                  });
-                  setJoinRequest(null);
-                }}
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 🔹 CANVAS */}
-      <CanvasRoom
-        socket={socket}
-        roomId={roomId}
-        existingShapes={existingShapes}
-      />
-    </>
+    <CanvasRoom
+      socket={socket}
+      roomId={roomId}
+      existingShapes={existingShapes}
+    />
   );
 }

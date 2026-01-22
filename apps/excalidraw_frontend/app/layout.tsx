@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import getToken from "@/components/getToken";
 import Navbar from "@/components/Navbar";
+import NotificationWrapper from "@/components/NotificationWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,8 +32,10 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar token={token} />
-        {children}
+        <NotificationWrapper>
+          <Navbar token={token} />
+          {children}
+        </NotificationWrapper>
       </body>
     </html>
   );

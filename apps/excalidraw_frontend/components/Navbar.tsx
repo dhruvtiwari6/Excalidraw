@@ -3,10 +3,13 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, Plus, Users, X } from "lucide-react";
+import { LogIn, LogOut, Plus, Users, X, Bell, Check, XCircle } from "lucide-react";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { useNotifications } from "@/app/hooks/useNotifications";
+import { Socket } from "socket.io-client";
+import { useSocket } from "@/app/hooks/useSocket";
 
 interface NavbarProps {
   token: string | null;
@@ -21,6 +24,58 @@ export default function Navbar({ token }: NavbarProps) {
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  
+  const { requests, removeRequest, setupSocketListeners } = useNotifications();
+  
+  // Set up global socket connection for notifications
+  const { socket: globalSocket } = useSocket(token || "", -1);
+  
+  useEffect(() => {
+    if (isAuthenticated && globalSocket) {
+      setupSocketListeners(globalSocket);
+    }
+  }, [isAuthenticated, globalSocket, setupSocketListeners]);
+  
+  // Close notifications when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    
+    if (showNotifications) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showNotifications]);
+  
+  const handleAcceptRequest = (request: { roomId: number; userId: number; id: string }) => {
+    if (!globalSocket) return;
+    
+    globalSocket.emit("room:join:response", {
+      roomId: request.roomId,
+      userId: request.userId,
+      approved: true,
+    });
+    removeRequest(request.id);
+  };
+  
+  const handleRejectRequest = (request: { roomId: number; userId: number; id: string }) => {
+    if (!globalSocket) return;
+    
+    globalSocket.emit("room:join:response", {
+      roomId: request.roomId,
+      userId: request.userId,
+      approved: false,
+    });
+    removeRequest(request.id);
+  };
 
   const handleLogout = async () => {
     try {
@@ -243,6 +298,71 @@ export default function Navbar({ token }: NavbarProps) {
                   {error}
                 </span>
               )}
+
+              {/* Notification Icon */}
+              <div className="relative" ref={notificationRef}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 relative"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <Bell className="h-4 w-4" />
+                  {requests.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                      {requests.length}
+                    </span>
+                  )}
+                </Button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-background border border-border rounded-lg shadow-lg z-[100] max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b border-border">
+                      <h3 className="font-semibold text-sm">Join Requests</h3>
+                    </div>
+                    {requests.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        No pending requests
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {requests.map((request) => (
+                          <div key={request.id} className="p-3 hover:bg-accent transition-colors">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">
+                                  User {request.userId}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Wants to join Room {request.roomId}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => handleAcceptRequest(request)}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => handleRejectRequest(request)}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <Button
                 variant="outline"

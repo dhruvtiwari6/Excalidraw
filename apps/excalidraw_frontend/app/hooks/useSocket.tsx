@@ -11,8 +11,7 @@ export function useSocket(token: string, roomId : number) {
     console.log("token : " ,token);
 
     useEffect(() => {
-
-        if(roomId == -1) return;
+        if (!token) return;
 
         async function connect() {
             const ws = io(`${process.env.NEXT_PUBLIC_WS_URL}`, {
@@ -25,13 +24,18 @@ export function useSocket(token: string, roomId : number) {
                 setSocket(ws);
                 setLoading(false);
             })
+            
+            ws.on('disconnect', () => {
+                setSocket(null);
+            })
         }
 
         connect();
-
-      
-
-    }, []);
+        
+        return () => {
+            // Cleanup handled by socket.io
+        };
+    }, [token]);
 
     return {socket , loading}
 }
