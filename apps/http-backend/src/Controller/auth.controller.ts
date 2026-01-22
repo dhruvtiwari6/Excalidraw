@@ -60,7 +60,8 @@ export const SignIn = async(req : Request, res : Response , next : NextFunction)
         const options : CookieOptions = {
             httpOnly : true,
             secure : true,
-            sameSite: "none"
+            sameSite: "none",
+            path: "/"
         };
 
         return res
@@ -114,6 +115,7 @@ export const  SignUp = async (req: Request, res: Response, next: NextFunction) =
       httpOnly: true,
       secure: true,
       sameSite: "none",
+      path: "/"
     };
 
     return res
@@ -131,3 +133,23 @@ export const  SignUp = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
+export const Logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Cookie options to clear cookies (set to expire in the past)
+    const clearOptions: CookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      expires: new Date(0), // Set expiration to epoch time to clear cookie
+      path: "/",
+    };
+
+    return res
+      .status(200)
+      .clearCookie("accessToken", clearOptions)
+      .clearCookie("refreshToken", clearOptions)
+      .json({ message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

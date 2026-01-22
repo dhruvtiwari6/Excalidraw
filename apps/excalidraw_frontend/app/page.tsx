@@ -1,7 +1,11 @@
-import Image from "next/image";
+import getToken from "@/components/getToken";
+import HomePage from "@/components/HomePage";
 
-export default function Home() {
-  return (
-   <div>excalidraw frontend</div>
-  );
+export default async function Home() {
+    const token = await getToken();
+
+    return (
+        <HomePage token={token} />
+    )
+
 }

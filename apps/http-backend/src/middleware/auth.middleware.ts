@@ -6,7 +6,7 @@ const Verify_jwt = async (req: Request, res: Response, next: NextFunction) => {
         const header = req.headers['authorization'] || req.headers['Authorization'];
         let token: string | undefined;
 
-        console.log("headers : ", header);
+        // console.log("headers : ", header);
 
         if (req.cookies?.accessToken) {
             token = req.cookies.accessToken;
@@ -15,7 +15,7 @@ const Verify_jwt = async (req: Request, res: Response, next: NextFunction) => {
         }
 
 
-        console.log("token :",token);
+        // console.log("token :",token);
 
         if (token === undefined) {
             return res.status(401).json(
@@ -23,10 +23,12 @@ const Verify_jwt = async (req: Request, res: Response, next: NextFunction) => {
             )
         };
 
+        // console.log("access token secret : ", process.env.ACCESS_TOKEN_SECRET);
+
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string);
+        console.log("decoded : ", decoded);
 
         if (decoded) {
-
             req.userId = (decoded as JwtPayload).id;
             next();
         } else {

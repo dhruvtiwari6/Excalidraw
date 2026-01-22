@@ -40,7 +40,7 @@ function
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     existingShapes.forEach((shape) => {
-        ctx.strokeStyle = "rgb(255,255,255)";
+        ctx.strokeStyle = "rgb(0,0,0)";
         ctx.lineWidth = 2;
 
         if (shape.type === "rect") {
@@ -88,7 +88,7 @@ function
 }
 
 
-export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, height: number, initialTool: TSelectedTool, socket: Socket | null, roomId: number, existingShapes : Shape[]) {
+export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, height: number, initialTool: TSelectedTool, socket: Socket | null, roomId: number, existingShapes: Shape[]) {
     console.log("you are in canvasDraw")
 
     let clicked = false;
@@ -106,6 +106,22 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
     if (!ctx) return;
 
     if (socket !== null) {
+
+        // socket.on("room:join:request", ({ roomId, userId }) => {
+        //     // const allow = window.confirm(`User ${userId} wants to join`);
+
+        // prompt("Your question")
+
+
+        //     // socket.emit("room:join:response", {
+        //     //     roomId,
+        //     //     userId,
+        //     //     approved: allow,
+        //     // });
+
+        //     alert("someone wants to join");
+        // });
+
 
         socket.on("shape:created", (shape: Shape) => {
 
@@ -210,7 +226,9 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
             for (let i = existingShapes.length - 1; i >= 0; i--) {
                 if (isPointInShape(e.clientX, e.clientY, existingShapes[i])) {
                     existingShapes.splice(i, 1);
-                    socket.emit("shape:remove", { idx: i, roomId });
+                    if (socket !== null) {
+                        socket.emit("shape:remove", { idx: i, roomId });
+                    }
                     break;
                 }
             }
@@ -305,15 +323,15 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         }
 
 
-        const shape = existingShapes[existingShapes.length - 1];
-
-
-        if (!isDragging && currentTool != "eraser" && socket != null) {
-            socket.emit("shape:create", {
-                roomId,
-                type: shape.type.toUpperCase(),
-                data: shape,
-            });
+        if (!isDragging && currentTool != "eraser" && existingShapes.length > 0) {
+            const shape = existingShapes[existingShapes.length - 1];
+            if (socket !== null) {
+                socket.emit("shape:create", {
+                    roomId,
+                    type: shape.type.toUpperCase(),
+                    data: shape,
+                });
+            }
         }
 
         isDragging = false;
@@ -382,7 +400,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
             // Regular drawing
             clearCanvas(existingShapes, ctx, canvas, socket, roomId);
-            ctx.strokeStyle = "rgb(255,255,255)";
+            ctx.strokeStyle = "rgb(0,0,0)";
             ctx.lineWidth = 2;
 
             if (currentTool === "line") {
@@ -435,6 +453,9 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mousemove', handleMouseMove);
 
+    // Draw existing shapes on initialization
+    clearCanvas(existingShapes, ctx, canvas, socket, roomId);
+
     return {
         setTool: (tool: TSelectedTool) => {
             currentTool = tool;
@@ -449,7 +470,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         },
         getShapes: () => existingShapes,
         clearAll: () => {
-            if(socket != null) socket.emit("shape:clear", { roomId });
+            if (socket != null) socket.emit("shape:clear", { roomId });
             existingShapes = [];
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
