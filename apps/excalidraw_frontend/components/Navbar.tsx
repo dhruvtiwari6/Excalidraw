@@ -1,3 +1,394 @@
+// "use client";
+
+// import { useRouter } from "next/navigation";
+// import Link from "next/link";
+// import { Button } from "@/components/ui/button";
+// import { LogIn, LogOut, Plus, Users, X, Bell, Check, XCircle } from "lucide-react";
+// import axios from "axios";
+// import { useState, useEffect, useRef } from "react";
+// import { Input } from "@/components/ui/input";
+// import { useNotifications } from "@/app/hooks/useNotifications";
+// import { Socket } from "socket.io-client";
+// import { useSocket } from "@/app/hooks/useSocket";
+
+// interface NavbarProps {
+//   token: string | null;
+// }
+
+// export default function Navbar({ token }: NavbarProps) {
+//   const router = useRouter();
+//   const isAuthenticated = token !== null;
+//   const [joinRoomSlug, setJoinRoomSlug] = useState("");
+//   const [createRoomName, setCreateRoomName] = useState("");
+//   const [showJoinInput, setShowJoinInput] = useState(false);
+//   const [showCreateInput, setShowCreateInput] = useState(false);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState("");
+//   const [showNotifications, setShowNotifications] = useState(false);
+//   const notificationRef = useRef<HTMLDivElement>(null);
+  
+//   const { requests, removeRequest, setupSocketListeners } = useNotifications();
+  
+//   // Set up global socket connection for notifications
+//   const { socket: globalSocket } = useSocket(token || "", -1);
+  
+//   useEffect(() => {
+//     if (isAuthenticated && globalSocket) {
+//       setupSocketListeners(globalSocket);
+//     }
+//   }, [isAuthenticated, globalSocket, setupSocketListeners]);
+  
+//   // Close notifications when clicking outside
+//   useEffect(() => {
+//     const handleClickOutside = (event: MouseEvent) => {
+//       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+//         setShowNotifications(false);
+//       }
+//     };
+    
+//     if (showNotifications) {
+//       document.addEventListener("mousedown", handleClickOutside);
+//     }
+    
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, [showNotifications]);
+  
+//   const handleAcceptRequest = (request: { roomId: number; userId: number; id: string }) => {
+//     if (!globalSocket) return;
+    
+//     globalSocket.emit("room:join:response", {
+//       roomId: request.roomId,
+//       userId: request.userId,
+//       approved: true,
+//     });
+//     removeRequest(request.id);
+//   };
+  
+//   const handleRejectRequest = (request: { roomId: number; userId: number; id: string }) => {
+//     if (!globalSocket) return;
+    
+//     globalSocket.emit("room:join:response", {
+//       roomId: request.roomId,
+//       userId: request.userId,
+//       approved: false,
+//     });
+//     removeRequest(request.id);
+//   };
+
+//   const handleLogout = async () => {
+//     try {
+//       // Call logout endpoint with token in header
+//       if (token) {
+//         await axios.post(
+//           `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`,
+//           {},
+//           {
+//             headers: {
+//               Authorization: `Bearer ${token}`,
+//             },
+//             withCredentials: true,
+//           }
+//         );
+//       }
+//     } catch (error) {
+//       // Even if logout endpoint fails, we'll clear the cookie client-side
+//       console.error("Logout error:", error);
+//     } finally {
+//       // Clear the cookie by setting it to expire
+//       document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+//       router.push("/");
+//       router.refresh();
+//     }
+//   };
+
+//   const handleJoinRoom = async () => {
+//     if (!joinRoomSlug.trim() || !token) return;
+    
+//     setLoading(true);
+//     setError("");
+//     try {
+//       router.push(`/canvas/${joinRoomSlug.trim()}`);
+//       setShowJoinInput(false);
+//       setJoinRoomSlug("");
+//     } catch (error: any) {
+//       setError(error.response?.data?.message || "Failed to join room");
+//       console.error("Error joining room:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleCreateRoom = async () => {
+//     if (!createRoomName.trim() || !token) return;
+    
+//     setLoading(true);
+//     setError("");
+//     try {
+//       const res = await axios.post(
+//         `${process.env.NEXT_PUBLIC_BACKEND_URL}/room/createRoom`,
+//         { name: createRoomName.trim() },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+
+//       if (res.status === 200) {
+//         router.push(`/canvas/${createRoomName.trim()}`);
+//         setShowCreateInput(false);
+//         setCreateRoomName("");
+//         setError("");
+//       }
+//     } catch (error: any) {
+//       setError(error.response?.data?.message || "Failed to create room. Room may already exist.");
+//       console.error("Error creating room:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+//       <div className="container flex h-14 items-center justify-between px-4">
+//         <div className="flex items-center gap-2">
+//           <Link href="/" className="flex items-center gap-2 font-semibold">
+//             <svg
+//               className="h-5 w-5"
+//               fill="none"
+//               stroke="currentColor"
+//               viewBox="0 0 24 24"
+//             >
+//               <path
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//                 strokeWidth={2}
+//                 d="M13 10V3L4 14h7v7l9-11h-7z"
+//               />
+//             </svg>
+//             <span>Canvas Draw</span>
+//           </Link>
+//         </div>
+
+//         <div className="flex items-center gap-2">
+//           {isAuthenticated ? (
+//             <>
+//               {showJoinInput ? (
+//                 <div className="flex items-center gap-2">
+//                   <Input
+//                     placeholder="Enter room slug"
+//                     value={joinRoomSlug}
+//                     onChange={(e) => {
+//                       setJoinRoomSlug(e.target.value);
+//                       setError("");
+//                     }}
+//                     onKeyDown={(e) => {
+//                       if (e.key === "Enter" && !loading && joinRoomSlug.trim()) {
+//                         handleJoinRoom();
+//                       }
+//                       if (e.key === "Escape") {
+//                         setShowJoinInput(false);
+//                         setJoinRoomSlug("");
+//                         setError("");
+//                       }
+//                     }}
+//                     className="h-8 w-48"
+//                     autoFocus
+//                   />
+//                   <Button
+//                     size="sm"
+//                     onClick={handleJoinRoom}
+//                     disabled={loading || !joinRoomSlug.trim()}
+//                     className="gap-2"
+//                   >
+//                     {loading ? "Joining..." : "Join"}
+//                   </Button>
+//                   <Button
+//                     variant="ghost"
+//                     size="sm"
+//                     onClick={() => {
+//                       setShowJoinInput(false);
+//                       setJoinRoomSlug("");
+//                       setError("");
+//                     }}
+//                     className="h-8 w-8 p-0"
+//                   >
+//                     <X className="h-4 w-4" />
+//                   </Button>
+//                 </div>
+//               ) : (
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   className="gap-2"
+//                   onClick={() => {
+//                     setShowJoinInput(true);
+//                     setShowCreateInput(false);
+//                     setCreateRoomName("");
+//                   }}
+//                 >
+//                   <Users className="h-4 w-4" />
+//                   Join Room
+//                 </Button>
+//               )}
+
+//               {showCreateInput ? (
+//                 <div className="flex items-center gap-2">
+//                   <Input
+//                     placeholder="Enter room slug"
+//                     value={createRoomName}
+//                     onChange={(e) => {
+//                       setCreateRoomName(e.target.value);
+//                       setError("");
+//                     }}
+//                     onKeyDown={(e) => {
+//                       if (e.key === "Enter" && !loading && createRoomName.trim()) {
+//                         handleCreateRoom();
+//                       }
+//                       if (e.key === "Escape") {
+//                         setShowCreateInput(false);
+//                         setCreateRoomName("");
+//                         setError("");
+//                       }
+//                     }}
+//                     className="h-8 w-48"
+//                     autoFocus
+//                   />
+//                   <Button
+//                     size="sm"
+//                     onClick={handleCreateRoom}
+//                     disabled={loading || !createRoomName.trim()}
+//                     className="gap-2"
+//                   >
+//                     {loading ? "Creating..." : "Create"}
+//                   </Button>
+//                   <Button
+//                     variant="ghost"
+//                     size="sm"
+//                     onClick={() => {
+//                       setShowCreateInput(false);
+//                       setCreateRoomName("");
+//                       setError("");
+//                     }}
+//                     className="h-8 w-8 p-0"
+//                   >
+//                     <X className="h-4 w-4" />
+//                   </Button>
+//                 </div>
+//               ) : (
+//                 <Button
+//                   variant="default"
+//                   size="sm"
+//                   className="gap-2"
+//                   onClick={() => {
+//                     setShowCreateInput(true);
+//                     setShowJoinInput(false);
+//                     setJoinRoomSlug("");
+//                   }}
+//                 >
+//                   <Plus className="h-4 w-4" />
+//                   Create Room
+//                 </Button>
+//               )}
+
+//               {error && (
+//                 <span className="text-xs text-destructive max-w-[200px] truncate">
+//                   {error}
+//                 </span>
+//               )}
+
+//               {/* Notification Icon */}
+//               <div className="relative" ref={notificationRef}>
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   className="gap-2 relative"
+//                   onClick={() => setShowNotifications(!showNotifications)}
+//                 >
+//                   <Bell className="h-4 w-4" />
+//                   {requests.length > 0 && (
+//                     <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+//                       {requests.length}
+//                     </span>
+//                   )}
+//                 </Button>
+                
+//                 {showNotifications && (
+//                   <div className="absolute right-0 top-full mt-2 w-80 bg-background border border-border rounded-lg shadow-lg z-[100] max-h-96 overflow-y-auto">
+//                     <div className="p-3 border-b border-border">
+//                       <h3 className="font-semibold text-sm">Join Requests</h3>
+//                     </div>
+//                     {requests.length === 0 ? (
+//                       <div className="p-4 text-center text-sm text-muted-foreground">
+//                         No pending requests
+//                       </div>
+//                     ) : (
+//                       <div className="divide-y divide-border">
+//                         {requests.map((request) => (
+//                           <div key={request.id} className="p-3 hover:bg-accent transition-colors">
+//                             <div className="flex items-start justify-between gap-2">
+//                               <div className="flex-1 min-w-0">
+//                                 <p className="text-sm font-medium">
+//                                   User {request.userId}
+//                                 </p>
+//                                 <p className="text-xs text-muted-foreground">
+//                                   Wants to join Room {request.roomId}
+//                                 </p>
+//                               </div>
+//                               <div className="flex items-center gap-1">
+//                                 <Button
+//                                   size="sm"
+//                                   variant="ghost"
+//                                   className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+//                                   onClick={() => handleAcceptRequest(request)}
+//                                 >
+//                                   <Check className="h-4 w-4" />
+//                                 </Button>
+//                                 <Button
+//                                   size="sm"
+//                                   variant="ghost"
+//                                   className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+//                                   onClick={() => handleRejectRequest(request)}
+//                                 >
+//                                   <XCircle className="h-4 w-4" />
+//                                 </Button>
+//                               </div>
+//                             </div>
+//                           </div>
+//                         ))}
+//                       </div>
+//                     )}
+//                   </div>
+//                 )}
+//               </div>
+
+//               <Button
+//                 variant="outline"
+//                 size="sm"
+//                 onClick={handleLogout}
+//                 className="gap-2"
+//               >
+//                 <LogOut className="h-4 w-4" />
+//                 Logout
+//               </Button>
+//             </>
+//           ) : (
+//             <Link href="/signIn">
+//               <Button variant="default" size="sm" className="gap-2">
+//                 <LogIn className="h-4 w-4" />
+//                 Login
+//               </Button>
+//             </Link>
+//           )}
+//         </div>
+//       </div>
+//     </nav>
+//   );
+// }
+
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -8,14 +399,13 @@ import axios from "axios";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useNotifications } from "@/app/hooks/useNotifications";
-import { Socket } from "socket.io-client";
 import { useSocket } from "@/app/hooks/useSocket";
 
 interface NavbarProps {
   token: string | null;
 }
 
-export default function Navbar({ token }: NavbarProps) {
+export function Navbar({ token }: NavbarProps) {
   const router = useRouter();
   const isAuthenticated = token !== null;
   const [joinRoomSlug, setJoinRoomSlug] = useState("");
@@ -28,8 +418,6 @@ export default function Navbar({ token }: NavbarProps) {
   const notificationRef = useRef<HTMLDivElement>(null);
   
   const { requests, removeRequest, setupSocketListeners } = useNotifications();
-  
-  // Set up global socket connection for notifications
   const { socket: globalSocket } = useSocket(token || "", -1);
   
   useEffect(() => {
@@ -38,7 +426,6 @@ export default function Navbar({ token }: NavbarProps) {
     }
   }, [isAuthenticated, globalSocket, setupSocketListeners]);
   
-  // Close notifications when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
@@ -79,7 +466,6 @@ export default function Navbar({ token }: NavbarProps) {
 
   const handleLogout = async () => {
     try {
-      // Call logout endpoint with token in header
       if (token) {
         await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`,
@@ -93,10 +479,8 @@ export default function Navbar({ token }: NavbarProps) {
         );
       }
     } catch (error) {
-      // Even if logout endpoint fails, we'll clear the cookie client-side
       console.error("Logout error:", error);
     } finally {
-      // Clear the cookie by setting it to expire
       document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       router.push("/");
       router.refresh();
@@ -150,35 +534,42 @@ export default function Navbar({ token }: NavbarProps) {
     }
   };
 
+  const closeInputs = () => {
+    setShowJoinInput(false);
+    setShowCreateInput(false);
+    setJoinRoomSlug("");
+    setCreateRoomName("");
+    setError("");
+  };
+
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
+    <nav className="sticky top-0 z-50 w-full border-b border-accent/20 bg-background/98 backdrop-blur-md supports-[backdrop-filter]:bg-background/95">
+      <div className="flex h-16 items-center justify-between px-6 max-w-7xl mx-auto w-full">
+        {/* Logo Section */}
+        <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
+          <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors duration-300">
             <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
+              className="h-5 w-5 text-primary"
+              fill="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
+              <path d="M13 3v8h8V3h-8zm0 10V5h-2v8h2zm-4 0h2V5h-2v8zm6-2h2V5h-2v6z" />
             </svg>
-            <span>Canvas Draw</span>
-          </Link>
-        </div>
+          </div>
+          <span className="font-semibold text-sm tracking-tight hidden sm:inline text-foreground">
+            Canvas
+          </span>
+        </Link>
 
-        <div className="flex items-center gap-2">
-          {isAuthenticated ? (
+        {/* Center Actions - Desktop Only */}
+        <div className="hidden lg:flex items-center gap-3 flex-1 mx-8">
+          {isAuthenticated && (
             <>
               {showJoinInput ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-accent/5 px-3 py-1.5 rounded-lg border border-accent/20 flex-1 max-w-xs">
+                  <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <Input
-                    placeholder="Enter room slug"
+                    placeholder="Room slug..."
                     value={joinRoomSlug}
                     onChange={(e) => {
                       setJoinRoomSlug(e.target.value);
@@ -189,55 +580,47 @@ export default function Navbar({ token }: NavbarProps) {
                         handleJoinRoom();
                       }
                       if (e.key === "Escape") {
-                        setShowJoinInput(false);
-                        setJoinRoomSlug("");
-                        setError("");
+                        closeInputs();
                       }
                     }}
-                    className="h-8 w-48"
+                    className="h-6 border-0 bg-transparent p-0 placeholder:text-xs focus:ring-0 text-sm"
                     autoFocus
                   />
                   <Button
                     size="sm"
                     onClick={handleJoinRoom}
                     disabled={loading || !joinRoomSlug.trim()}
-                    className="gap-2"
+                    className="h-6 px-2 text-xs rounded-md flex-shrink-0"
                   >
-                    {loading ? "Joining..." : "Join"}
+                    {loading ? "..." : "Join"}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowJoinInput(false);
-                      setJoinRoomSlug("");
-                      setError("");
-                    }}
-                    className="h-8 w-8 p-0"
+                  <button
+                    onClick={closeInputs}
+                    className="p-0.5 hover:bg-accent/20 rounded-md transition-colors"
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
                 </div>
               ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 border-accent/30 hover:bg-accent/5 text-xs bg-transparent"
                   onClick={() => {
                     setShowJoinInput(true);
                     setShowCreateInput(false);
-                    setCreateRoomName("");
                   }}
                 >
                   <Users className="h-4 w-4" />
-                  Join Room
+                  <span className="hidden md:inline">Join Room</span>
                 </Button>
               )}
 
               {showCreateInput ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-accent/5 px-3 py-1.5 rounded-lg border border-accent/20 flex-1 max-w-xs">
+                  <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <Input
-                    placeholder="Enter room slug"
+                    placeholder="Room name..."
                     value={createRoomName}
                     onChange={(e) => {
                       setCreateRoomName(e.target.value);
@@ -248,109 +631,143 @@ export default function Navbar({ token }: NavbarProps) {
                         handleCreateRoom();
                       }
                       if (e.key === "Escape") {
-                        setShowCreateInput(false);
-                        setCreateRoomName("");
-                        setError("");
+                        closeInputs();
                       }
                     }}
-                    className="h-8 w-48"
+                    className="h-6 border-0 bg-transparent p-0 placeholder:text-xs focus:ring-0 text-sm"
                     autoFocus
                   />
                   <Button
                     size="sm"
                     onClick={handleCreateRoom}
                     disabled={loading || !createRoomName.trim()}
-                    className="gap-2"
+                    className="h-6 px-2 text-xs rounded-md flex-shrink-0"
                   >
-                    {loading ? "Creating..." : "Create"}
+                    {loading ? "..." : "Create"}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowCreateInput(false);
-                      setCreateRoomName("");
-                      setError("");
-                    }}
-                    className="h-8 w-8 p-0"
+                  <button
+                    onClick={closeInputs}
+                    className="p-0.5 hover:bg-accent/20 rounded-md transition-colors"
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
                 </div>
               ) : (
                 <Button
                   variant="default"
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 text-xs rounded-lg"
                   onClick={() => {
                     setShowCreateInput(true);
                     setShowJoinInput(false);
-                    setJoinRoomSlug("");
                   }}
                 >
                   <Plus className="h-4 w-4" />
-                  Create Room
+                  <span className="hidden md:inline">Create</span>
                 </Button>
               )}
 
               {error && (
-                <span className="text-xs text-destructive max-w-[200px] truncate">
+                <span className="text-xs text-destructive max-w-[150px] truncate flex-shrink-0">
                   {error}
                 </span>
               )}
+            </>
+          )}
+        </div>
 
-              {/* Notification Icon */}
+        {/* Right Actions */}
+        <div className="flex items-center gap-2">
+          {isAuthenticated ? (
+            <>
+              {/* Mobile Menu - Show on small screens */}
+              <div className="flex lg:hidden gap-1">
+                {!showJoinInput && !showCreateInput && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0 rounded-lg hover:bg-accent/10"
+                      onClick={() => {
+                        setShowJoinInput(true);
+                        setShowCreateInput(false);
+                      }}
+                      title="Join room"
+                    >
+                      <Users className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0 rounded-lg hover:bg-accent/10"
+                      onClick={() => {
+                        setShowCreateInput(true);
+                        setShowJoinInput(false);
+                      }}
+                      title="Create room"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              {/* Notifications */}
               <div className="relative" ref={notificationRef}>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="gap-2 relative"
+                  className="h-9 w-9 p-0 rounded-lg hover:bg-accent/10 relative"
                   onClick={() => setShowNotifications(!showNotifications)}
+                  title="Notifications"
                 >
                   <Bell className="h-4 w-4" />
                   {requests.length > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
-                      {requests.length}
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-semibold">
+                      {requests.length > 9 ? '9+' : requests.length}
                     </span>
                   )}
                 </Button>
                 
                 {showNotifications && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-background border border-border rounded-lg shadow-lg z-[100] max-h-96 overflow-y-auto">
-                    <div className="p-3 border-b border-border">
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-background border border-accent/20 rounded-xl shadow-lg z-[100] max-h-96 overflow-y-auto">
+                    <div className="sticky top-0 bg-background p-4 border-b border-accent/20">
                       <h3 className="font-semibold text-sm">Join Requests</h3>
                     </div>
                     {requests.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-muted-foreground">
-                        No pending requests
+                      <div className="p-8 text-center">
+                        <Bell className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                        <p className="text-xs text-muted-foreground">No pending requests</p>
                       </div>
                     ) : (
-                      <div className="divide-y divide-border">
+                      <div className="divide-y divide-accent/10">
                         {requests.map((request) => (
-                          <div key={request.id} className="p-3 hover:bg-accent transition-colors">
-                            <div className="flex items-start justify-between gap-2">
+                          <div key={request.id} className="p-4 hover:bg-accent/5 transition-colors group">
+                            <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium">
+                                <p className="text-sm font-medium text-foreground">
                                   User {request.userId}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                   Wants to join Room {request.roomId}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  className="h-8 w-8 p-0 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 hover:text-emerald-700 transition-colors"
                                   onClick={() => handleAcceptRequest(request)}
+                                  title="Accept"
                                 >
                                   <Check className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  className="h-8 w-8 p-0 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 transition-colors"
                                   onClick={() => handleRejectRequest(request)}
+                                  title="Reject"
                                 >
                                   <XCircle className="h-4 w-4" />
                                 </Button>
@@ -364,26 +781,120 @@ export default function Navbar({ token }: NavbarProps) {
                 )}
               </div>
 
+              {/* Logout Button */}
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="gap-2"
+                className="h-9 px-3 gap-2 rounded-lg hover:bg-destructive/10 hover:text-destructive text-foreground transition-colors text-xs hidden sm:flex"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                <span className="hidden md:inline">Logout</span>
+              </Button>
+
+              {/* Mobile Logout - Icon only */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="h-9 w-9 p-0 rounded-lg hover:bg-destructive/10 text-foreground sm:hidden"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
               </Button>
             </>
           ) : (
             <Link href="/signIn">
-              <Button variant="default" size="sm" className="gap-2">
+              <Button variant="default" size="sm" className="gap-2 rounded-lg text-xs">
                 <LogIn className="h-4 w-4" />
-                Login
+                <span className="hidden sm:inline">Login</span>
               </Button>
             </Link>
           )}
         </div>
       </div>
+
+      {/* Mobile Expanded Input Area */}
+      {isAuthenticated && (showJoinInput || showCreateInput) && (
+        <div className="lg:hidden border-t border-accent/20 bg-accent/2 px-6 py-3">
+          <div className="flex gap-2">
+            {showJoinInput && (
+              <div className="flex items-center gap-2 flex-1 bg-background border border-accent/30 px-3 py-2 rounded-lg">
+                <Input
+                  placeholder="Room slug..."
+                  value={joinRoomSlug}
+                  onChange={(e) => {
+                    setJoinRoomSlug(e.target.value);
+                    setError("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !loading && joinRoomSlug.trim()) {
+                      handleJoinRoom();
+                    }
+                    if (e.key === "Escape") {
+                      closeInputs();
+                    }
+                  }}
+                  className="border-0 bg-transparent p-0 focus:ring-0 text-sm"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  onClick={handleJoinRoom}
+                  disabled={loading || !joinRoomSlug.trim()}
+                  className="h-7 px-2 text-xs flex-shrink-0 rounded-md"
+                >
+                  {loading ? "..." : "Join"}
+                </Button>
+              </div>
+            )}
+
+            {showCreateInput && (
+              <div className="flex items-center gap-2 flex-1 bg-background border border-accent/30 px-3 py-2 rounded-lg">
+                <Input
+                  placeholder="Room name..."
+                  value={createRoomName}
+                  onChange={(e) => {
+                    setCreateRoomName(e.target.value);
+                    setError("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !loading && createRoomName.trim()) {
+                      handleCreateRoom();
+                    }
+                    if (e.key === "Escape") {
+                      closeInputs();
+                    }
+                  }}
+                  className="border-0 bg-transparent p-0 focus:ring-0 text-sm"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  onClick={handleCreateRoom}
+                  disabled={loading || !createRoomName.trim()}
+                  className="h-7 px-2 text-xs flex-shrink-0 rounded-md"
+                >
+                  {loading ? "..." : "Create"}
+                </Button>
+              </div>
+            )}
+
+            <button
+              onClick={closeInputs}
+              className="p-2 hover:bg-accent/20 rounded-lg transition-colors flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {error && (
+            <p className="text-xs text-destructive mt-2">{error}</p>
+          )}
+        </div>
+      )}
     </nav>
   );
 }
+
+export default Navbar;
+
