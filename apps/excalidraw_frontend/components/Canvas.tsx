@@ -12,6 +12,7 @@ type JoinResult = {
   success: boolean;
   pending?: boolean;
   reason?: string;
+  users?: string[]; 
 };
 
 export default function Canvas({
@@ -33,10 +34,9 @@ export default function Canvas({
   const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Use notification system instead of local state
+
   const { addRequest } = useNotifications();
 
-  // 🔹 SEND JOIN REQUEST
   useEffect(() => {
     if (!socket || loading || roomId === -1) return;
 
@@ -95,7 +95,7 @@ export default function Canvas({
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("room:join:request", (data: { roomId: number; userId: number }) => {
+    socket.on("room:join:request", (data) => {
       // Only add to notifications if user is admin of this room
       if (admin_of_room === userId_want_to_join) {
         addRequest(data);

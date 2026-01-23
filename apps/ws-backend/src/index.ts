@@ -54,11 +54,12 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.data.userId);
   });
 
-  // socket.on("room:join" , (data)=> {
-  //   socket.join(data.roomId);
-  // })
-  socket.on("room:join", (data, ack) => {
+
+  socket.on("room:join", async (data, ack) => {
     const { roomId, userId_want_to_join, admin_of_room } = data;
+    if (userId_want_to_join !== admin_of_room) {
+      pubClient.sadd(`room:${roomId}:users`, String(userId_want_to_join));
+    }
 
 
     console.log("userId ", userId_want_to_join);
@@ -66,27 +67,33 @@ io.on("connection", (socket) => {
     user_id_map_socket_id.set(String(userId_want_to_join), socket.id);
     socket_id_map_user_id.set(socket.id, String(userId_want_to_join));
 
+    const adminSocketId = user_id_map_socket_id.get(admin_of_room);
+    if (!adminSocketId) {
+      console.log("Admin offline");
+      return ack?.({ success: false, reason: "ADMIN_OFFLINE" });
+    }
+
     // Admin joining their own room
     if (userId_want_to_join === admin_of_room) {
-      console.log("aap shi ho");
+      const users_wanting = await pubClient.smembers(`room:${roomId}:users`);
+      console.log("users_wanting", users_wanting);
+      io.to(adminSocketId).emit("room:join:request", {
+        roomId,
+        userId: users_wanting,
+      });
 
       socket.join(roomId);
       return ack?.({ success: true });
     }
 
     console.log("aap log galat ho");
+
     // Non-admin: ask for permission
-    const adminSocketId = user_id_map_socket_id.get(admin_of_room);
-
-    if (!adminSocketId) {
-      return ack?.({ success: false, reason: "ADMIN_OFFLINE" });
-    }
-
     console.log("Sending the room join request to admin");
 
     io.to(adminSocketId).emit("room:join:request", {
       roomId,
-      userId: userId_want_to_join,
+      userId: [userId_want_to_join],
     });
 
     // Tell requester to wait
@@ -98,24 +105,24 @@ io.on("connection", (socket) => {
     const userSocketId = user_id_map_socket_id.get(String(userId));
 
     console.log(userSocketId);
-  if (!userSocketId) return;
+    if (!userSocketId) return;
 
-  console.log("approved: " ,approved);
+    console.log("approved: ", approved);
+    pubClient.srem(`room:${roomId}:users`, String(userId));
 
-  if (approved) {
+    if (approved) {
+      io.sockets.sockets.get(userSocketId)?.join(roomId);
 
-    io.sockets.sockets.get(userSocketId)?.join(roomId);
-
-    io.to(userSocketId).emit("room:join:result", {
-      success: true,
-      roomId,
-    });
-  } else {
-    io.to(userSocketId).emit("room:join:result", {
-      success: false,
-      reason: "REJECTED_BY_ADMIN",
-    });
-  }
+      io.to(userSocketId).emit("room:join:result", {
+        success: true,
+        roomId,
+      });
+    } else {
+      io.to(userSocketId).emit("room:join:result", {
+        success: false,
+        reason: "REJECTED_BY_ADMIN",
+      });
+    }
   });
 
 

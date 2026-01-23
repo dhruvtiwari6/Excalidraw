@@ -8,7 +8,7 @@ export function useSocket(token: string, roomId : number) {
     const [socket, setSocket] = useState<Socket | null>(null);
 
 
-    console.log("token : " ,token);
+    // console.log("token : " ,token);
 
     useEffect(() => {
         if (!token) return;

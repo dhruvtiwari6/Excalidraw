@@ -417,14 +417,14 @@ export function Navbar({ token }: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   
-  const { requests, removeRequest, setupSocketListeners } = useNotifications();
+  const { requests, removeRequest} = useNotifications();
   const { socket: globalSocket } = useSocket(token || "", -1);
   
-  useEffect(() => {
-    if (isAuthenticated && globalSocket) {
-      setupSocketListeners(globalSocket);
-    }
-  }, [isAuthenticated, globalSocket, setupSocketListeners]);
+  // useEffect(() => {
+  //   if (isAuthenticated && globalSocket) {
+  //     setupSocketListeners(globalSocket);
+  //   }
+  // }, [isAuthenticated, globalSocket, setupSocketListeners]);
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -746,7 +746,7 @@ export function Navbar({ token }: NavbarProps) {
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-foreground">
-                                  User {request.userId}
+                                    {request.userId}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-0.5">
                                   Wants to join Room {request.roomId}
