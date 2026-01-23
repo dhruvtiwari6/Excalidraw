@@ -20,6 +20,7 @@ import {
   Eraser,
   Minus,
   Trash2,
+  Save,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +58,7 @@ export default function CanvasRoom({
 }: CanvasRoomProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedTool, setSelectedTool] = useState<TSelectedTool>("rect");
+  const [isSaving, setIsSaving] = useState(false);
   const drawInstanceRef = useRef<ReturnType<typeof CanvasDraw> | null>(null);
 
   // Initialize canvas only once
@@ -130,6 +132,15 @@ export default function CanvasRoom({
   const handleClearCanvas = () => {
     if (drawInstanceRef.current?.clearAll) {
       drawInstanceRef.current.clearAll();
+    }
+  };
+
+  const handleSaveShapes = () => {
+    if (drawInstanceRef.current?.saveShapes && socket) {
+      setIsSaving(true);
+      drawInstanceRef.current.saveShapes();
+      // Reset saving state after a short delay
+      setTimeout(() => setIsSaving(false), 1000);
     }
   };
 

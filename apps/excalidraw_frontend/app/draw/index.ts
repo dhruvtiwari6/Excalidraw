@@ -1,4 +1,3 @@
-
 import { TSelectedTool } from "@/components/CanvasRoom";
 import { Socket } from "socket.io-client";
 
@@ -139,14 +138,13 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
     if (socket !== null && !isDummyToken) {
         socket.on("shape:created", (shape: Shape) => {
 
-            console.log("shape moved");
+            console.log("shape created");
             existingShapes.push(shape);
             clearCanvas(existingShapes, ctx, canvas, socket, roomId);
         });
 
         socket.on("shape:clear", (data) => {
-
-            existingShapes = [];
+            existingShapes.length = 0;  // Clear array without losing reference
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (isDummyToken) {
                 saveToLocalStorage();
@@ -163,6 +161,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
             existingShapes.splice((data.idx), 1);
             clearCanvas(existingShapes, ctx, canvas, socket, roomId);
         });
+
     }
 
 
@@ -249,6 +248,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
                     if (isDummyToken) {
                         saveToLocalStorage();
                     }
+                    clearCanvas(existingShapes, ctx, canvas, socket, roomId);
                     break;
                 }
             }
@@ -283,6 +283,14 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
     const handleMouseUp = (e: MouseEvent) => {
         clicked = false;
+
+        // Don't create new shapes if we were dragging
+        if (isDragging) {
+            isDragging = false;
+            draggedShapeIndex = null;
+            clearCanvas(existingShapes, ctx, canvas, socket, roomId);
+            return;
+        }
 
         if (currentTool === "rect") {
             existingShapes.push({
@@ -343,7 +351,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         }
 
 
-        if (!isDragging && currentTool != "eraser" && existingShapes.length > 0) {
+        if (currentTool != "eraser" && currentTool != "select" && existingShapes.length > 0) {
             const shape = existingShapes[existingShapes.length - 1];
             if (socket !== null && !isDummyToken) {
                 socket.emit("shape:create", {
@@ -356,9 +364,6 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
                 saveToLocalStorage();
             }
         }
-
-        isDragging = false;
-        draggedShapeIndex = null;
 
         clearCanvas(existingShapes, ctx, canvas, socket, roomId);
     };
@@ -499,7 +504,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
             if (socket != null && !isDummyToken) {
                 socket.emit("shape:clear", { roomId });
             }
-            existingShapes = [];
+            existingShapes.length = 0;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (isDummyToken) {
                 if (typeof window !== 'undefined') {

@@ -155,8 +155,14 @@ io.on("connection", (socket) => {
     socket.leave(data.roomId);
   })
 
-  socket.on("shape:clear", (data) => {
+  socket.on("shape:clear", async(data) => {
     socket.to(data.roomId).emit("shape:clear", data);
+    await prisma.shape.deleteMany({
+      where: {
+        roomId: data.roomId,
+      },
+    });
+    
   })
 
   socket.on("shape:remove", (data) => {
@@ -182,6 +188,39 @@ io.on("connection", (socket) => {
       },
     });
   });
+
+  // socket.on("shape:save", async ({ roomId, shapes }) => {
+  //   console.log("Saving shapes for room:", roomId, "Count:", shapes.length);
+    
+  //   try {
+  //     // Delete all existing shapes for this room
+  //     await prisma.shape.deleteMany({
+  //       where: { roomId },
+  //     });
+
+  //     // Create new shapes
+  //     if (shapes && shapes.length > 0) {
+  //       await prisma.shape.createMany({
+  //         data: shapes.map((shape: any) => ({
+  //           roomId,
+  //           userId: socket.data.userId,
+  //           type: shape.type.toUpperCase(),
+  //           data: shape,
+  //         })),
+  //       });
+  //     }
+
+  //     // Broadcast saved shapes to all users in the room
+  //     io.to(roomId).emit("shape:saved", {
+  //       roomId,
+  //       shapes,
+  //     });
+
+  //     console.log("Shapes saved and broadcasted to room:", roomId);
+  //   } catch (error) {
+  //     console.error("Error saving shapes:", error);
+  //   }
+  // });
 
   // socket.on("message" , async(data)=>{
   //   // const parsedData = JSON.parse(data);

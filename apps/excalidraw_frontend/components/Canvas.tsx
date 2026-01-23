@@ -115,14 +115,19 @@ export default function Canvas({
     async function fetchShapes() {
       try {
         setGettingShapes(true);
-        const res = await axios.get<{ data?: Shape[] }>(
+        const res = await axios.get<{ data?: Array<{ type: string; data: any }> }>(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/room/chats/${roomId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         if (res.data?.data) {
-          setExistingShapes(res.data.data);
+          // Transform database shapes to frontend format
+          const transformedShapes: Shape[] = res.data.data.map((dbShape) => ({
+            ...dbShape.data,
+            type: dbShape.type.toLowerCase() as Shape["type"],
+          }));
+          setExistingShapes(transformedShapes);
         }
       } catch {
         setError("FETCH_FAILED");

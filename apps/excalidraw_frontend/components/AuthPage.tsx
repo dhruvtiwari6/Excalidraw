@@ -183,10 +183,10 @@ export default function AuthPage({ isSignIn }: { isSignIn: boolean }) {
               </div>
             </CardContent>
 
-            <CardFooter className="flex flex-col gap-4">
+            <CardFooter className="flex flex-col gap-4 pt-6">
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full mt-2"
                 disabled={loading}
               >
                 {loading ? (
