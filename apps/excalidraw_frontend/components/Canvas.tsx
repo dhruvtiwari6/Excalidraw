@@ -135,11 +135,13 @@ export default function Canvas({
   }, [joined, roomId, token]);
 
   if(roomId == -1 || token === "dummy") {
+    // For dummy token, start with empty shapes (will load from localStorage)
     return (
       <CanvasRoom
         socket={socket}
         roomId={roomId}
-        existingShapes={existingShapes}
+        existingShapes={[]}
+        token={token}
       />
     );
   }
@@ -155,6 +157,7 @@ export default function Canvas({
       socket={socket}
       roomId={roomId}
       existingShapes={existingShapes}
+      token={token}
     />
   );
 }

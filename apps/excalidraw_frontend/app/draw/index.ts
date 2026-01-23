@@ -88,8 +88,11 @@ function
 }
 
 
-export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, height: number, initialTool: TSelectedTool, socket: Socket | null, roomId: number, existingShapes: Shape[]) {
+export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, height: number, initialTool: TSelectedTool, socket: Socket | null, roomId: number, existingShapes: Shape[], token?: string) {
     console.log("you are in canvasDraw")
+
+    const isDummyToken = token === "dummy";
+    const storageKey = `canvas_shapes_${roomId}`;
 
     let clicked = false;
     let startX = 0, startY = 0;
@@ -105,7 +108,35 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    if (socket !== null) {
+    // Load shapes from localStorage if dummy token (replace existingShapes)
+    if (isDummyToken && typeof window !== 'undefined') {
+        try {
+            const savedShapes = localStorage.getItem(storageKey);
+            if (savedShapes) {
+                const parsed = JSON.parse(savedShapes);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    // Replace existingShapes with localStorage data
+                    existingShapes.length = 0;
+                    existingShapes.push(...parsed);
+                }
+            }
+        } catch (error) {
+            console.error("Error loading shapes from localStorage:", error);
+        }
+    }
+
+    // Save shapes to localStorage
+    const saveToLocalStorage = () => {
+        if (isDummyToken && typeof window !== 'undefined') {
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(existingShapes));
+            } catch (error) {
+                console.error("Error saving shapes to localStorage:", error);
+            }
+        }
+    };
+
+    if (socket !== null && !isDummyToken) {
         socket.on("shape:created", (shape: Shape) => {
 
             console.log("shape moved");
@@ -117,6 +148,9 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
             existingShapes = [];
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (isDummyToken) {
+                saveToLocalStorage();
+            }
         });
 
 
@@ -209,8 +243,11 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
             for (let i = existingShapes.length - 1; i >= 0; i--) {
                 if (isPointInShape(e.clientX, e.clientY, existingShapes[i])) {
                     existingShapes.splice(i, 1);
-                    if (socket !== null) {
+                    if (socket !== null && !isDummyToken) {
                         socket.emit("shape:remove", { idx: i, roomId });
+                    }
+                    if (isDummyToken) {
+                        saveToLocalStorage();
                     }
                     break;
                 }
@@ -308,12 +345,15 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
         if (!isDragging && currentTool != "eraser" && existingShapes.length > 0) {
             const shape = existingShapes[existingShapes.length - 1];
-            if (socket !== null) {
+            if (socket !== null && !isDummyToken) {
                 socket.emit("shape:create", {
                     roomId,
                     type: shape.type.toUpperCase(),
                     data: shape,
                 });
+            }
+            if (isDummyToken) {
+                saveToLocalStorage();
             }
         }
 
@@ -370,12 +410,15 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
                     }));
                 }
 
-                if (socket !== null) {
+                if (socket !== null && !isDummyToken) {
                     socket.emit("shape:update", {
                         roomId,
                         index: draggedShapeIndex,
                         shape: existingShapes[draggedShapeIndex]
                     });
+                }
+                if (isDummyToken) {
+                    saveToLocalStorage();
                 }
                 clearCanvas(existingShapes, ctx, canvas, socket, roomId); // re draw
                 return;
@@ -453,9 +496,16 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         },
         getShapes: () => existingShapes,
         clearAll: () => {
-            if (socket != null) socket.emit("shape:clear", { roomId });
+            if (socket != null && !isDummyToken) {
+                socket.emit("shape:clear", { roomId });
+            }
             existingShapes = [];
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (isDummyToken) {
+                if (typeof window !== 'undefined') {
+                    localStorage.removeItem(storageKey);
+                }
+            }
         }
     };
 }

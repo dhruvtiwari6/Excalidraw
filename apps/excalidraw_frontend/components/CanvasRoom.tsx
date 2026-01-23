@@ -36,6 +36,7 @@ interface CanvasRoomProps {
   socket: Socket | null;
   roomId: number;
   existingShapes: Shape[];
+  token?: string;
 }
 
 const tools = [
@@ -52,6 +53,7 @@ export default function CanvasRoom({
   socket,
   roomId,
   existingShapes,
+  token,
 }: CanvasRoomProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedTool, setSelectedTool] = useState<TSelectedTool>("rect");
@@ -74,7 +76,8 @@ export default function CanvasRoom({
         selectedTool,
         socket,
         roomId,
-        existingShapes
+        existingShapes,
+        token
       );
 
       const handleResize = () => {
