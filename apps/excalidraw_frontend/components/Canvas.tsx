@@ -38,7 +38,9 @@ export default function Canvas({
   const { addRequest } = useNotifications();
 
   useEffect(() => {
-    if (!socket || loading || roomId === -1) return;
+    if (!socket || loading || roomId === -1) {
+      return;
+    }
 
     socket.emit(
       "room:join",
@@ -131,6 +133,16 @@ export default function Canvas({
 
     fetchShapes();
   }, [joined, roomId, token]);
+
+  if(roomId == -1 || token === "dummy") {
+    return (
+      <CanvasRoom
+        socket={socket}
+        roomId={roomId}
+        existingShapes={existingShapes}
+      />
+    );
+  }
 
   // 🔹 UI STATES
   if (loading || !socket) return <div>hi users</div>;

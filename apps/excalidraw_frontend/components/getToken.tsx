@@ -5,7 +5,7 @@ export default async function getToken() {
   const token = cookieStore.get('accessToken')?.value;
 
   if (!token) {
-    return null;
+    return "dummy";
   }
 
   return token;

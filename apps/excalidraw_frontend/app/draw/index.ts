@@ -106,23 +106,6 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
     if (!ctx) return;
 
     if (socket !== null) {
-
-        // socket.on("room:join:request", ({ roomId, userId }) => {
-        //     // const allow = window.confirm(`User ${userId} wants to join`);
-
-        // prompt("Your question")
-
-
-        //     // socket.emit("room:join:response", {
-        //     //     roomId,
-        //     //     userId,
-        //     //     approved: allow,
-        //     // });
-
-        //     alert("someone wants to join");
-        // });
-
-
         socket.on("shape:created", (shape: Shape) => {
 
             console.log("shape moved");
