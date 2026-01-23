@@ -20,8 +20,8 @@ const io = new Server({
 
 io.listen(8080);
 
-const user_id_map_socket_id = new Map<string, string>();
-const socket_id_map_user_id = new Map<string, string>();
+// const user_id_map_socket_id = new Map<string, string>();
+// const socket_id_map_user_id = new Map<string, string>();
 
 //runs before every new connection
 io.use((socket, next) => {
@@ -50,9 +50,17 @@ io.use((socket, next) => {
 
 
 io.on("connection", (socket) => {
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.data.userId);
+  socket.on("disconnect", async () => {
+    const userId = await pubClient.get(`socket_user:${socket.id}`);
+  
+    if (userId) {
+      await pubClient.del(`user_socket:${userId}`);
+      await pubClient.del(`socket_user:${socket.id}`);
+    }
+  
+    console.log("User disconnected:", userId);
   });
+  
 
 
   socket.on("room:join", async (data, ack) => {
@@ -62,12 +70,23 @@ io.on("connection", (socket) => {
     }
 
 
-    console.log("userId ", userId_want_to_join);
-    console.log("Admin Id", admin_of_room);
-    user_id_map_socket_id.set(String(userId_want_to_join), socket.id);
-    socket_id_map_user_id.set(socket.id, String(userId_want_to_join));
+    // console.log("userId ", userId_want_to_join);
+    // console.log("Admin Id", admin_of_room);
+    await pubClient.set(
+      `user_socket:${userId_want_to_join}`,
+      socket.id
+    );
 
-    const adminSocketId = user_id_map_socket_id.get(admin_of_room);
+    await pubClient.set(
+      `socket_user:${socket.id}`,
+      String(userId_want_to_join)
+    );
+
+
+    const adminSocketId = await pubClient.get(
+      `user_socket:${admin_of_room}`
+    );
+
     if (!adminSocketId) {
       console.log("Admin offline");
       return ack?.({ success: false, reason: "ADMIN_OFFLINE" });
@@ -100,9 +119,14 @@ io.on("connection", (socket) => {
     return ack?.({ success: true, pending: true });
   });
 
-  socket.on("room:join:response", ({ roomId, userId, approved }) => {
+  socket.on("room:join:response", async({ roomId, userId, approved }) => {
     console.log("request came");
-    const userSocketId = user_id_map_socket_id.get(String(userId));
+    // const userSocketId = user_id_map_socket_id.get(String(userId));
+
+    const userSocketId = await pubClient.get(
+      `user_socket:${userId}`
+    );
+    
 
     console.log(userSocketId);
     if (!userSocketId) return;
