@@ -15,7 +15,7 @@ const Verify_jwt = async (req: Request, res: Response, next: NextFunction) => {
         }
 
 
-        // console.log("token :",token);
+        console.log("token :",token);
 
         if (token === undefined) {
             return res.status(401).json(
