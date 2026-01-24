@@ -30,6 +30,8 @@ const Verify_jwt = async (req: Request, res: Response, next: NextFunction) => {
 
         if (decoded) {
             req.userId = (decoded as JwtPayload).id;
+            req.name = (decoded as JwtPayload).name;
+
             next();
         } else {
             return res.status(401).json({ message: "unauthorized" });

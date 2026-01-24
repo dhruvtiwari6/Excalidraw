@@ -135,15 +135,6 @@ export default function CanvasRoom({
     }
   };
 
-  const handleSaveShapes = () => {
-    if (drawInstanceRef.current?.saveShapes && socket) {
-      setIsSaving(true);
-      drawInstanceRef.current.saveShapes();
-      // Reset saving state after a short delay
-      setTimeout(() => setIsSaving(false), 1000);
-    }
-  };
-
   const getCursor = () => {
     switch (selectedTool) {
       case "select":

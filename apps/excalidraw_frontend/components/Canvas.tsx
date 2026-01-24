@@ -98,7 +98,7 @@ export default function Canvas({
     if (!socket) return;
 
     socket.on("room:join:request", (data) => {
-      // Only add to notifications if user is admin of this room
+      console.log("data in notifications", data);
       if (admin_of_room === userId_want_to_join) {
         addRequest(data);
       }

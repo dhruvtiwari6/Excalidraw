@@ -41,7 +41,10 @@ io.use((socket, next) => {
       process.env.ACCESS_TOKEN_SECRET as string
     ) as JwtPayload;
 
+
+
     socket.data.userId = decoded.id;
+    socket.data.name = decoded.name;
     next();
   } catch (err) {
     next(new Error("Unauthorized: invalid token"));
@@ -49,26 +52,29 @@ io.use((socket, next) => {
 });
 
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   socket.on("disconnect", async () => {
     const userId = await pubClient.get(`socket_user:${socket.id}`);
-  
+
     if (userId) {
       await pubClient.del(`user_socket:${userId}`);
       await pubClient.del(`socket_user:${socket.id}`);
     }
-  
+
     console.log("User disconnected:", userId);
   });
-  
+
 
 
   socket.on("room:join", async (data, ack) => {
     const { roomId, userId_want_to_join, admin_of_room } = data;
     if (userId_want_to_join !== admin_of_room) {
       pubClient.sadd(`room:${roomId}:users`, String(userId_want_to_join));
+      pubClient.sadd(`room:${roomId}:users_name`, String(socket.data.name));
+
     }
 
+    await pubClient.set(`user:${userId_want_to_join}:name`, socket.data.name);
 
     // console.log("userId ", userId_want_to_join);
     // console.log("Admin Id", admin_of_room);
@@ -94,11 +100,31 @@ io.on("connection", (socket) => {
 
     // Admin joining their own room
     if (userId_want_to_join === admin_of_room) {
-      const users_wanting = await pubClient.smembers(`room:${roomId}:users`);
-      console.log("users_wanting", users_wanting);
+      // const users_wanting = await pubClient.smembers(`room:${roomId}:users_name`);
+      // console.log("users_wanting", users_wanting);
+      // io.to(adminSocketId).emit("room:join:request", {
+      //   roomId,
+      //   userId: users_wanting,
+      //   name: users_wanting.map()
+      // });
+
+
+      const userIds = await pubClient.smembers(`room:${roomId}:users`);
+      console.log("haha " ,userIds);
+
+      const users = await Promise.all(
+        userIds.map(async (userId) => {
+          const name = await pubClient.get(`user:${userId}:name`);
+          console.log("username :", name);
+          return { userId, name };
+        })
+      );
+
+      console.log("dfad :" ,users);
+
       io.to(adminSocketId).emit("room:join:request", {
         roomId,
-        userId: users_wanting,
+        users
       });
 
       socket.join(roomId);
@@ -113,20 +139,21 @@ io.on("connection", (socket) => {
     io.to(adminSocketId).emit("room:join:request", {
       roomId,
       userId: [userId_want_to_join],
+      name: socket.data.name,
     });
 
     // Tell requester to wait
     return ack?.({ success: true, pending: true });
   });
 
-  socket.on("room:join:response", async({ roomId, userId, approved }) => {
+  socket.on("room:join:response", async ({ roomId, userId, approved }) => {
     console.log("request came");
     // const userSocketId = user_id_map_socket_id.get(String(userId));
 
     const userSocketId = await pubClient.get(
       `user_socket:${userId}`
     );
-    
+
 
     console.log(userSocketId);
     if (!userSocketId) return;
@@ -155,14 +182,14 @@ io.on("connection", (socket) => {
     socket.leave(data.roomId);
   })
 
-  socket.on("shape:clear", async(data) => {
+  socket.on("shape:clear", async (data) => {
     socket.to(data.roomId).emit("shape:clear", data);
     await prisma.shape.deleteMany({
       where: {
         roomId: data.roomId,
       },
     });
-    
+
   })
 
   socket.on("shape:remove", (data) => {
@@ -191,7 +218,7 @@ io.on("connection", (socket) => {
 
   // socket.on("shape:save", async ({ roomId, shapes }) => {
   //   console.log("Saving shapes for room:", roomId, "Count:", shapes.length);
-    
+
   //   try {
   //     // Delete all existing shapes for this room
   //     await prisma.shape.deleteMany({

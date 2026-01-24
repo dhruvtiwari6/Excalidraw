@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken"
 import { CookieOptions } from "express"
 
 
-const generateAccessAndRefreshToken = async (userId: string) => {
+const generateAccessAndRefreshToken = async (userId: string, name: string) => {
     const accessSecret = process.env.ACCESS_TOKEN_SECRET;
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
 
@@ -15,13 +15,13 @@ const generateAccessAndRefreshToken = async (userId: string) => {
     }
 
     const accessToken = jwt.sign(
-        { id: userId },
+        { id: userId , name: name},
         accessSecret,
-        { expiresIn: "15m" }
+        { expiresIn: "4d" }
     );
 
     const refreshToken = jwt.sign(
-        { id: userId },
+        { id: userId , name: name},
         refreshSecret,
         { expiresIn: "7d" }
     );
@@ -55,7 +55,7 @@ export const SignIn = async(req : Request, res : Response , next : NextFunction)
             return res.json(404).json({mesage : "user does not exist"});
         }
 
-        const {accessToken , refreshToken} = await generateAccessAndRefreshToken(user.id);
+        const {accessToken , refreshToken} = await generateAccessAndRefreshToken(user.id, user.name);
         
         const options : CookieOptions = {
             httpOnly : true,
@@ -106,7 +106,7 @@ export const  SignUp = async (req: Request, res: Response, next: NextFunction) =
     });
 
     const { accessToken, refreshToken } =
-      await generateAccessAndRefreshToken(newUser.id);
+      await generateAccessAndRefreshToken(newUser.id, name);
 
       console.log("accessToken ", accessToken);
       console.log("refresh token " , refreshToken);
