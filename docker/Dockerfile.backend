@@ -14,7 +14,7 @@ RUN npm install
 
 
 ARG DATABASE_URL
-RUN echo $DATABSE_URL
+RUN echo $DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 RUN npm run db:generate
 
