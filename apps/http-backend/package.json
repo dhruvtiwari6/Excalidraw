@@ -9,7 +9,6 @@
     "start": "node dist/index.js"
   },
   "devDependencies": {
-    "@repo/common": "*",
     "@repo/db": "*",
     "@repo/typescript-config": "*"
   },
