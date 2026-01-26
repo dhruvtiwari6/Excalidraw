@@ -27,5 +27,5 @@ jobs:
           file: ./docker/Dockerfile.backend
           push: true
           tags: dhruvtiwari7829/excalidraw-backend:${{ github.sha }}  
-          build-args: |
-            DATABASE_URL = ${{secrets.DATABASE_URL}};  
+          args: |
+            DATABASE_URL = ${{ secrets.DATABASE_URL }};  
