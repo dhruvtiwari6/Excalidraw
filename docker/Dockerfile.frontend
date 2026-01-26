@@ -11,6 +11,9 @@ COPY ./apps/excalidraw_frontend ./apps/excalidraw_frontend
 
 RUN npm install
 # to ensure prisma client exists
+
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 RUN npm run db:generate  
 
 

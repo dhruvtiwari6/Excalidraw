@@ -89,7 +89,7 @@ function
 }
 
 
-export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, height: number, initialTool: TSelectedTool, socket: Socket | null, roomId: number, existingShapes: Shape[], token?: string) {
+export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, height: number, initialTool: TSelectedTool, socket: Socket | null, roomId: number,     existingShapes: Shape[], token?: string) {
     console.log("you are in canvasDraw")
 
     const isDummyToken = token === "dummy";

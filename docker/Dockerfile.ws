@@ -10,6 +10,9 @@ COPY ./turbo.json ./turbo.json
 COPY ./apps/ws-backend ./apps/ws-backend
 
 RUN npm install
+
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 RUN npm run db:generate
 
 
