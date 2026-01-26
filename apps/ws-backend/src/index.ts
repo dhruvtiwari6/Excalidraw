@@ -110,7 +110,7 @@ io.on("connection", async (socket) => {
 
 
       const userIds = await pubClient.smembers(`room:${roomId}:users`);
-      console.log("haha " ,userIds);
+      console.log("haha ", userIds);
 
       const users = await Promise.all(
         userIds.map(async (userId) => {
@@ -120,7 +120,7 @@ io.on("connection", async (socket) => {
         })
       );
 
-      console.log("dfad :" ,users);
+      console.log("dfad :", users);
 
       io.to(adminSocketId).emit("room:join:request", {
         roomId,
@@ -138,8 +138,12 @@ io.on("connection", async (socket) => {
 
     io.to(adminSocketId).emit("room:join:request", {
       roomId,
-      userId: [userId_want_to_join],
-      name: socket.data.name,
+      users: [
+        {
+          userId: userId_want_to_join,
+          name: socket.data.name,
+        }
+      ]
     });
 
     // Tell requester to wait

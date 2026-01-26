@@ -23,8 +23,8 @@ export default function Canvas({
 }: {
   roomId: number;
   token: string;
-  userId_want_to_join: number;
-  admin_of_room: number;
+  userId_want_to_join: string;
+  admin_of_room: string;
 }) {
   const { socket, loading } = useSocket(token, roomId);
 
@@ -100,6 +100,7 @@ export default function Canvas({
     socket.on("room:join:request", (data) => {
       console.log("data in notifications", data);
       if (admin_of_room === userId_want_to_join) {
+        console.log("data", data);
         addRequest(data);
       }
     });

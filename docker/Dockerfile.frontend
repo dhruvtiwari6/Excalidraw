@@ -1,0 +1,19 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY ./packages ./packages
+COPY ./package-lock.json ./package-loc.json
+COPY ./package.json ./package.json 
+COPY ./turbo.json ./turbo.json
+
+COPY ./apps/excalidraw_frontend ./apps/excalidraw_frontend
+
+RUN npm install
+# to ensure prisma client exists
+RUN npm run db:generate  
+
+
+EXPOSE 3000
+
+CMD ["npm" , "run" , "start:web"]

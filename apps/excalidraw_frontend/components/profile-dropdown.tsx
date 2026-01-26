@@ -14,6 +14,19 @@ interface ProfileDropdownProps {
   onLogout: () => void;
 }
 
+interface UserData{
+  email: string;
+  id: string;
+  name: string;
+  photo: string;
+}
+
+interface UserProfileResponse{
+    data: UserData
+}
+
+
+
 export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,7 +69,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
 
   const loadUserProfile = async () => {
     try {
-      const res = await axios.get(
+      const res = await axios.get<UserProfileResponse>(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/profile`,
         {
           headers: {
@@ -68,8 +81,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
       console.log("res.data : ", res.data);
       if (res.data) {
         setUsername(res.data.data.name || "User");
-        setPhotoUrl(res.data.photoUrl || "");
-        setEditingUsername(res.data.username || "User");
+        setPhotoUrl(res.data.data.photo || "");
       }
     } catch (err) {
       console.error("Failed to load profile:", err);
@@ -147,7 +159,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
       const formData = new FormData();
       formData.append("photo", file);
 
-      const res = await axios.post(
+      const res = await axios.post<UserProfileResponse>(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/upload-photo`,
         formData,
         {
@@ -158,7 +170,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
         }
       );
 
-      setPhotoUrl(res.data.photoUrl);
+      setPhotoUrl(res.data.data.photo);
       setPhotoPreview("");
       setSuccess("Photo updated successfully");
       setTimeout(() => setSuccess(""), 3000);
@@ -188,7 +200,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="h-9 w-9 p-0 rounded-lg hover:bg-accent/10 transition-colors flex items-center justify-center flex-shrink-0"
+        className="h-9 w-9 p-0 rounded-lg hover:bg-accent/10 transition-colors flex items-center justify-center shrink-0"
         title="Profile"
       >
         <Avatar className="h-8 w-8">
@@ -261,7 +273,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
                     size="sm"
                     onClick={handleUpdateUsername}
                     disabled={loading}
-                    className="h-9 px-3 text-xs flex-shrink-0"
+                    className="h-9 px-3 text-xs shrink-0"
                   >
                     {loading ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -277,7 +289,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
                       setEditingUsername(username);
                     }}
                     disabled={loading}
-                    className="h-9 px-3 text-xs flex-shrink-0"
+                    className="h-9 px-3 text-xs shrink-0"
                   >
                     Cancel
                   </Button>
@@ -300,14 +312,14 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
             {/* Messages */}
             {error && (
               <div className="flex items-center gap-2 text-destructive text-xs bg-destructive/10 p-2 rounded-md">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {success && (
               <div className="flex items-center gap-2 text-emerald-600 text-xs bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-md">
-                <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                <CheckCircle className="h-4 w-4 shrink-0" />
                 <span>{success}</span>
               </div>
             )}

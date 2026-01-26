@@ -2,15 +2,21 @@ import Canvas from "@/components/Canvas";
 import getToken from "@/components/getToken";
 import axios from "axios";
 
+type RoomData = {
+  id:  number;
+  userId: string;  
+  adminId: string; 
+};
+
 type RoomResponse = {
-  data: number;
+  data: RoomData;
   message: string;
 };
 
 type RoomJoinInfo = {
   roomId: number;
-  userId_want_to_join: number;
-  admin_of_room: number;
+  userId_want_to_join: string;
+  admin_of_room: string;
 };
 
 
@@ -35,6 +41,9 @@ async function getRoom(slug: string, token: string): Promise<RoomJoinInfo> {
       }
     );
 
+    console.log("dsfdg " , res);
+
+
     console.log("response for particular room : ",res.data.data)
 
     return {roomId: res.data.data.id, userId_want_to_join: res.data.data.userId,  admin_of_room: res.data.data.adminId};
@@ -54,12 +63,7 @@ export default async function Canvas1({
   const { slug } = await params;
   const {roomId, userId_want_to_join, admin_of_room} = await getRoom(slug, token);
 
-  if (token == null) {
-    return new Response('Unauthorized', { status: 401 });
-  }
-
   return <Canvas roomId = {roomId} userId_want_to_join = {userId_want_to_join} admin_of_room={admin_of_room} token={token}/>;
 }
-
 
 

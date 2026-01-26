@@ -49,7 +49,7 @@ export function Navbar({ token }: NavbarProps) {
     };
   }, [showNotifications]);
   
-  const handleAcceptRequest = (request: { roomId: number; userId: number; id: string }) => {
+  const handleAcceptRequest = (request: { roomId: number; userId: string; id: string }) => {
     if (!globalSocket) return;
     
     globalSocket.emit("room:join:response", {
@@ -60,7 +60,7 @@ export function Navbar({ token }: NavbarProps) {
     removeRequest(request.id);
   };
   
-  const handleRejectRequest = (request: { roomId: number; userId: number; id: string }) => {
+  const handleRejectRequest = (request: { roomId: number; userId: string; id: string }) => {
     if (!globalSocket) return;
     
     globalSocket.emit("room:join:response", {
@@ -151,10 +151,10 @@ export function Navbar({ token }: NavbarProps) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-accent/20 bg-background/98 backdrop-blur-md supports-[backdrop-filter]:bg-background/95">
+    <nav className="sticky top-0 z-50 w-full border-b border-accent/20 bg-background/98 backdrop-blur-md supports-backdrop-filter:bg-background/95">
       <div className="flex h-16 items-center justify-between px-6 max-w-7xl mx-auto w-full">
         {/* Logo Section */}
-        <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
+        <Link href="/" className="flex items-center gap-3 group shrink-0">
           <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors duration-300">
             <svg
               className="h-5 w-5 text-primary"
@@ -175,7 +175,7 @@ export function Navbar({ token }: NavbarProps) {
             <>
               {showJoinInput ? (
                 <div className="flex items-center gap-2 bg-accent/5 px-3 py-1.5 rounded-lg border border-accent/20 flex-1 max-w-xs">
-                  <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
                     placeholder="Room slug..."
                     value={joinRoomSlug}
@@ -198,7 +198,7 @@ export function Navbar({ token }: NavbarProps) {
                     size="sm"
                     onClick={handleJoinRoom}
                     disabled={loading || !joinRoomSlug.trim()}
-                    className="h-6 px-2 text-xs rounded-md flex-shrink-0"
+                    className="h-6 px-2 text-xs rounded-md shrink-0"
                   >
                     {loading ? "..." : "Join"}
                   </Button>
@@ -226,7 +226,7 @@ export function Navbar({ token }: NavbarProps) {
 
               {showCreateInput ? (
                 <div className="flex items-center gap-2 bg-accent/5 px-3 py-1.5 rounded-lg border border-accent/20 flex-1 max-w-xs">
-                  <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                   <Input
                     placeholder="Room name..."
                     value={createRoomName}
@@ -249,7 +249,7 @@ export function Navbar({ token }: NavbarProps) {
                     size="sm"
                     onClick={handleCreateRoom}
                     disabled={loading || !createRoomName.trim()}
-                    className="h-6 px-2 text-xs rounded-md flex-shrink-0"
+                    className="h-6 px-2 text-xs rounded-md shrink-0"
                   >
                     {loading ? "..." : "Create"}
                   </Button>
@@ -276,7 +276,7 @@ export function Navbar({ token }: NavbarProps) {
               )}
 
               {error && (
-                <span className="text-xs text-destructive max-w-[150px] truncate flex-shrink-0">
+                <span className="text-xs text-destructive max-w-[150px] truncate shrink-0">
                   {error}
                 </span>
               )}
@@ -330,7 +330,7 @@ export function Navbar({ token }: NavbarProps) {
                             setMobileMenuOpen(false);
                           }}
                           disabled={loading || !joinRoomSlug.trim()}
-                          className="h-9 px-4 text-xs rounded-lg flex-shrink-0"
+                          className="h-9 px-4 text-xs rounded-lg shrink-0"
                         >
                           {loading ? "..." : "Join"}
                         </Button>
@@ -363,7 +363,7 @@ export function Navbar({ token }: NavbarProps) {
                             setMobileMenuOpen(false);
                           }}
                           disabled={loading || !createRoomName.trim()}
-                          className="h-9 px-4 text-xs rounded-lg flex-shrink-0"
+                          className="h-9 px-4 text-xs rounded-lg shrink-0"
                         >
                           {loading ? "..." : "Create"}
                         </Button>
@@ -471,7 +471,7 @@ export function Navbar({ token }: NavbarProps) {
                                   Wants to join Room {request.roomId}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -508,7 +508,7 @@ export function Navbar({ token }: NavbarProps) {
                   className="h-9 w-9 p-0 rounded-lg hover:bg-accent/10 hidden md:flex"
                   title="Profile Settings"
                 >
-                  <Settings className="h-4 w-4" />
+                  {/* <Settings className="h-4 w-4" /> */}
                 </Button>
               </Link>
             </>
