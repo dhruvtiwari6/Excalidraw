@@ -26,4 +26,4 @@ jobs:
           context: .
           file: ./docker/Dockerfile.backend
           push: true
-          tags: dhruvtiwari7829/Excalidraw-backend:${{ github.sha }}    
+          tags: dhruvtiwari7829/excalidraw-backend:${{ github.sha }}    
