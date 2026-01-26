@@ -3,7 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY ./packages ./packages
-COPY ./package-lock.json ./package-loc.json
+COPY ./package-lock.json ./package-lock.json
 COPY ./package.json ./package.json 
 COPY ./turbo.json ./turbo.json
 

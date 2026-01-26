@@ -3,13 +3,18 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY ./packages ./packages
-COPY ./package-lock.json ./package-loc.json
+COPY ./package-lock.json ./package-lock.json
 COPY ./package.json ./package.json 
 COPY ./turbo.json ./turbo.json
 
 COPY ./apps/http-backend ./apps/http-backend
 
+
 RUN npm install
+
+
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 RUN npm run db:generate
 
 
