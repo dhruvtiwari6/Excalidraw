@@ -41,8 +41,8 @@ export default function AuthPage({ isSignIn }: { isSignIn: boolean }) {
         : { name, email, password };
 
       const url = isSignIn
-        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/signIn`
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/signUp`;
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signIn`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signUp`;
 
       const res: { status: number; data: unknown } = await axios.post(url, payload, {
         withCredentials: true,
