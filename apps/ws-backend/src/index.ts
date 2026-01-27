@@ -6,7 +6,11 @@ import { prisma } from "@repo/db"
 import 'dotenv/config'
 
 
-const pubClient = new Redis();
+const pubClient = new Redis({
+  host: 'redis',
+  port: 6379
+});
+
 const subClient = pubClient.duplicate();
 
 const io = new Server({
@@ -18,7 +22,7 @@ const io = new Server({
   adapter: createAdapter(pubClient, subClient)
 });
 
-io.listen(8080);
+io.listen(3001);
 
 // const user_id_map_socket_id = new Map<string, string>();
 // const socket_id_map_user_id = new Map<string, string>();
@@ -53,6 +57,7 @@ io.use((socket, next) => {
 
 
 io.on("connection", async (socket) => {
+  console.log("hi");
   socket.on("disconnect", async () => {
     const userId = await pubClient.get(`socket_user:${socket.id}`);
 
