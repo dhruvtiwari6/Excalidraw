@@ -12,7 +12,10 @@ const app = express() ;
 
 app.use(
   cors({
-    origin: "http://localhost:3000", 
+    origin: [
+      "http://localhost:3000",                 // local dev
+      "https://excalidraw.dhruv-tiwari.me"      // production
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

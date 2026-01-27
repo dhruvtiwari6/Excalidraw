@@ -20,7 +20,10 @@ const subClient = pubClient.duplicate();
 
 const io = new Server({
   cors: {
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000",                 // local dev
+      "https://excalidraw.dhruv-tiwari.me"      // production
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
