@@ -1,31 +1,31 @@
-# build the docker image
-# push the docker image to dockerhub
-# ssh into the vm and start the new image
+# # build the docker image
+# # push the docker image to dockerhub
+# # ssh into the vm and start the new image
 
-name: Deploy the web socket
-on:
-  push:
-    branches: [ main ]
+# name: Deploy the web socket
+# on:
+#   push:
+#     branches: [ main ]
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps: 
-      - name : Checkout the code
-        uses: actions/checkout@v6
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps: 
+#       - name : Checkout the code
+#         uses: actions/checkout@v6
 
-      - name : Docker login
-        uses:  docker/login-action@v3
-        with:
-          username: ${{secrets.DOCKERHUB_USERNAME}}
-          password: ${{secrets.DOCKERHUB_TOKEN}}
+#       - name : Docker login
+#         uses:  docker/login-action@v3
+#         with:
+#           username: ${{secrets.DOCKERHUB_USERNAME}}
+#           password: ${{secrets.DOCKERHUB_TOKEN}}
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/Dockerfile.ws
-          push: true
-          tags: dhruvtiwari7829/excalidraw-ws:${{ github.sha }}  
-          build-args: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }} 
+#       - name: Build and push
+#         uses: docker/build-push-action@v6
+#         with:
+#           context: .
+#           file: ./docker/Dockerfile.ws
+#           push: true
+#           tags: dhruvtiwari7829/excalidraw-ws:${{ github.sha }}  
+#           build-args: |
+#             DATABASE_URL=${{ secrets.DATABASE_URL }} 
