@@ -76,7 +76,7 @@ export function Navbar({ token }: NavbarProps) {
       console.log("token while logging Out : ", token);
       if (token) {
         await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/logout`,
           {},
           {
             headers: {
@@ -119,7 +119,7 @@ export function Navbar({ token }: NavbarProps) {
     setError("");
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/room/createRoom`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/createRoom`,
         { name: createRoomName.trim() },
         {
           headers: {

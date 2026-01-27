@@ -117,7 +117,7 @@ export default function Canvas({
       try {
         setGettingShapes(true);
         const res = await axios.get<{ data?: Array<{ type: string; data: any }> }>(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/room/chats/${roomId}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/chats/${roomId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

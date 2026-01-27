@@ -101,7 +101,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
 
     try {
       await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/update-username`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/update-username`,
         { username: editingUsername },
         {
           headers: {
@@ -160,7 +160,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
       formData.append("photo", file);
 
       const res = await axios.post<UserProfileResponse>(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/upload-photo`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/upload-photo`,
         formData,
         {
           headers: {
