@@ -33,7 +33,7 @@ async function getRoom(slug: string, token: string): Promise<RoomJoinInfo> {
     console.log("sending request to room : ", slug);
 
     const res = await axios.get<RoomResponse>(
-      `${baseURL}/api/room/roomName/${slug}`,
+      `${baseURL}/room/roomName/${slug}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
