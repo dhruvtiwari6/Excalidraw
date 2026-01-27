@@ -14,6 +14,8 @@ RUN npm install
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 RUN npm run db:generate
+RUN npx turbo run build --filter=ws-backend
+
 
 
 EXPOSE 3001
