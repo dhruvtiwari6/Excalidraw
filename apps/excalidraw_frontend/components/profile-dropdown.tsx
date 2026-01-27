@@ -70,7 +70,7 @@ export function ProfileDropdown({ token, onLogout }: ProfileDropdownProps) {
   const loadUserProfile = async () => {
     try {
       const res = await axios.get<UserProfileResponse>(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/profile`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/profile`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
