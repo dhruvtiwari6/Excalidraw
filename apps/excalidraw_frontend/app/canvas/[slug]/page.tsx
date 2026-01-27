@@ -24,7 +24,7 @@ async function getRoom(slug: string, token: string): Promise<RoomJoinInfo> {
 
 
   try {
-    const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const baseURL = process.env.BACKEND_INTERNAL_URL;
 
     if (!baseURL) {
       throw new Error("NEXT_PUBLIC_BACKEND_URL is not defined");

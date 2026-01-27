@@ -7,9 +7,14 @@ import 'dotenv/config'
 
 
 const pubClient = new Redis({
-  host: 'redis',
-  port: 6379
+  host: "redis",   // hardcode for now, remove env ambiguity
+  port: 6379,
+  retryStrategy(times) {
+    console.log("Redis retry attempt:", times);
+    return Math.min(times * 100, 2000);
+  },
 });
+
 
 const subClient = pubClient.duplicate();
 
@@ -22,7 +27,7 @@ const io = new Server({
   adapter: createAdapter(pubClient, subClient)
 });
 
-io.listen(3001);
+io.listen(8080);
 
 // const user_id_map_socket_id = new Map<string, string>();
 // const socket_id_map_user_id = new Map<string, string>();
