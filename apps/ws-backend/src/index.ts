@@ -19,6 +19,7 @@ const pubClient = new Redis({
 const subClient = pubClient.duplicate();
 
 const io = new Server({
+  path: "/socket.io",
   cors: {
     origin: [
       "http://localhost:3000",                 // local dev

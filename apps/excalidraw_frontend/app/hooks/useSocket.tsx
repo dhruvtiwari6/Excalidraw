@@ -18,7 +18,7 @@ export function useSocket(token: string, roomId : number) {
                 query: {
                     token: token
                 },
-            })
+        })
 
             ws.on('connect' , ()=>{
                 setSocket(ws);
