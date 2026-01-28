@@ -18,7 +18,6 @@ export function useSocket(token: string, roomId : number) {
                 query: {
                     token: token
                 },
-                path: "/socket.io",
             })
 
             ws.on('connect' , ()=>{
