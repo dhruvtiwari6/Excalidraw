@@ -17,7 +17,10 @@ export function useSocket(token: string, roomId : number) {
             const ws = io(`${process.env.NEXT_PUBLIC_WS_URL}`, {
                 query: {
                     token: token
-                }
+                },
+                path: "/socket.io",
+                transports: ["websocket", "polling"],
+
             })
 
             ws.on('connect' , ()=>{
