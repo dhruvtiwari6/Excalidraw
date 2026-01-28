@@ -19,8 +19,6 @@ export function useSocket(token: string, roomId : number) {
                     token: token
                 },
                 path: "/socket.io",
-                transports: ["websocket", "polling"],
-
             })
 
             ws.on('connect' , ()=>{
