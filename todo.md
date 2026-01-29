@@ -4,5 +4,8 @@
     - cloudinary for photo
     - not found page
     - error page
+    - remove the photo
+    - show cursor name
+    - profile css tailwind
 
 
