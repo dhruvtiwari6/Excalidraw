@@ -245,7 +245,8 @@ export default function CanvasRoom({
         <canvas
           ref={canvasRef}
           className="absolute inset-0"
-          style={{ cursor: getCursor() }}
+          style={{ cursor: getCursor(), touchAction: "none" }}
+          
         />
       </div>
     </TooltipProvider>

@@ -231,7 +231,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         return Math.sqrt(dx * dx + dy * dy);
     };
 
-    const handleMouseDown = (e: MouseEvent) => {
+    const handleMouseDown = (e: PointerEvent) => {
 
         console.log("clicked bro");
         clicked = true;
@@ -284,7 +284,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         }
     };
 
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleMouseUp = (e: PointerEvent) => {
         clicked = false;
 
         // Don't create new shapes if we were dragging
@@ -371,7 +371,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         clearCanvas(existingShapes, ctx, canvas, socket, roomId);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: PointerEvent) => {
         console.log("mouse moved")
 
         if (clicked) {
@@ -483,9 +483,9 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
         }
     };
 
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('pointerdown', handleMouseDown);
+    canvas.addEventListener('pointerup', handleMouseUp);
+    canvas.addEventListener('pointermove', handleMouseMove);
 
     // Draw existing shapes on initialization
     clearCanvas(existingShapes, ctx, canvas, socket, roomId);
@@ -495,9 +495,9 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
             currentTool = tool;
         },
         cleanup: () => {
-            canvas.removeEventListener('mousedown', handleMouseDown);
-            canvas.removeEventListener('mouseup', handleMouseUp);
-            canvas.removeEventListener('mousemove', handleMouseMove);
+            canvas.removeEventListener('pointerdown', handleMouseDown);
+            canvas.removeEventListener('pointerup', handleMouseUp);
+            canvas.removeEventListener('pointermove', handleMouseMove);
         },
         redraw: () => {
             clearCanvas(existingShapes, ctx, canvas, socket, roomId);
