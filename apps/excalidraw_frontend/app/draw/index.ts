@@ -109,6 +109,14 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const getCanvasCoordinates = (e: PointerEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: coords.x - rect.left,
+            y: e.clientY - rect.top
+        };
+    };
+
     // Load shapes from localStorage if dummy token (replace existingShapes)
     if (isDummyToken && typeof window !== 'undefined') {
         try {
@@ -235,15 +243,16 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
         console.log("clicked bro");
         clicked = true;
-        startX = e.clientX;
-        startY = e.clientY;
+        const coords = getCanvasCoordinates(e);
+        startX = coords.x;
+        startY = coords.y;
 
 
 
         // Check if clicking on existing shape (in reverse order to get top-most)
         if (currentTool === "eraser") {
             for (let i = existingShapes.length - 1; i >= 0; i--) {
-                if (isPointInShape(e.clientX, e.clientY, existingShapes[i])) {
+                if (isPointInShape(coords.x, coords.y, existingShapes[i])) {
                     existingShapes.splice(i, 1);
                     if (socket !== null && !isDummyToken) {
                         socket.emit("shape:remove", { idx: i, roomId });
@@ -259,23 +268,23 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
         if (currentTool === "select") {
             for (let i = existingShapes.length - 1; i >= 0; i--) {
-                if (isPointInShape(e.clientX, e.clientY, existingShapes[i])) {
+                if (isPointInShape(coords.x, coords.y, existingShapes[i])) {
                     isDragging = true;
                     draggedShapeIndex = i;
                     const shape = existingShapes[i];
 
                     // Calculate offset based on shape type
                     if (shape.type === "rect") {
-                        dragOffsetX = e.clientX - shape.x;
+                        dragOffsetX = coords.x - shape.x;
                         dragOffsetY = e.clientY - shape.y;
                     } else if (shape.type === "circle") {
-                        dragOffsetX = e.clientX - shape.x;
+                        dragOffsetX = coords.x - shape.x;
                         dragOffsetY = e.clientY - shape.y;
                     } else if (shape.type === "line" || shape.type === "arrow") {
-                        dragOffsetX = e.clientX - shape.x;
+                        dragOffsetX = coords.x - shape.x;
                         dragOffsetY = e.clientY - shape.y;
                     } else if (shape.type === "pencil") {
-                        dragOffsetX = e.clientX - shape.points[0].x;
+                        dragOffsetX = coords.x - shape.points[0].x;
                         dragOffsetY = e.clientY - shape.points[0].y;
                     }
                     break;
@@ -286,6 +295,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
     const handleMouseUp = (e: PointerEvent) => {
         clicked = false;
+        const coords = getCanvasCoordinates(e);
 
         // Don't create new shapes if we were dragging
         if (isDragging) {
@@ -300,34 +310,34 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
                 type: "rect",
                 x: startX,
                 y: startY,
-                width: e.clientX - startX,
-                height: e.clientY - startY
+                width: coords.x - startX,
+                height: coords.y - startY
             });
         } else if (currentTool === "line") {
             existingShapes.push({
                 type: "line",
                 x: startX,
                 y: startY,
-                mx: e.clientX,
-                my: e.clientY
+                mx: coords.x,
+                my: coords.y
             });
         } else if (currentTool === "arrow") {
-            if (e.clientX != startX) {
-                const angle = Math.atan2(e.clientY - startY, e.clientX - startX);
+            if (coords.x != startX) {
+                const angle = Math.atan2(coords.y - startY, coords.x - startX);
                 const headLength = 15;
 
-                let _l1x = e.clientX - headLength * Math.cos(angle - Math.PI / 6);
-                let _l1y = e.clientY - headLength * Math.sin(angle - Math.PI / 6);
+                let _l1x = coords.x - headLength * Math.cos(angle - Math.PI / 6);
+                let _l1y = coords.y - headLength * Math.sin(angle - Math.PI / 6);
 
-                let _l2x = e.clientX - headLength * Math.cos(angle + Math.PI / 6);
-                let _l2y = e.clientY - headLength * Math.sin(angle + Math.PI / 6);
+                let _l2x = coords.x - headLength * Math.cos(angle + Math.PI / 6);
+                let _l2y = coords.y - headLength * Math.sin(angle + Math.PI / 6);
 
                 existingShapes.push({
                     type: "arrow",
                     x: startX,
                     y: startY,
-                    mx: e.clientX,
-                    my: e.clientY,
+                    mx: coords.x,
+                    my: coords.y,
                     l1x: _l1x,
                     l1y: _l1y,
                     l2x: _l2x,
@@ -336,7 +346,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
                 })
             }
         } else if (currentTool === "circle") {
-            let radius = Math.sqrt((e.clientX - startX) * (e.clientX - startX) + (e.clientY - startY) * (e.clientY - startY));
+            let radius = Math.sqrt((coords.x - startX) * (coords.x - startX) + (coords.y - startY) * (coords.y - startY));
             existingShapes.push({
                 type: "circle",
                 x: startX,
@@ -373,13 +383,15 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
 
     const handleMouseMove = (e: PointerEvent) => {
         console.log("mouse moved")
+        const coords = getCanvasCoordinates(e);
+
 
         if (clicked) {
             // Handle dragging
             if (isDragging && draggedShapeIndex !== null) {
                 const shape = existingShapes[draggedShapeIndex];
-                const dx = e.clientX - dragOffsetX;
-                const dy = e.clientY - dragOffsetY;
+                const dx = coords.x - dragOffsetX;
+                const dy = coords.y - dragOffsetY;
 
                 if (shape.type === "rect") {
                     shape.x = dx;
@@ -410,8 +422,8 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
                     shape.l2x = shape.mx - headLength * Math.cos(angle + Math.PI / 6);
                     shape.l2y = shape.my - headLength * Math.sin(angle + Math.PI / 6);
                 } else if (shape.type === "pencil") {
-                    const offsetX = e.clientX - (shape.points[0].x + dragOffsetX);
-                    const offsetY = e.clientY - (shape.points[0].y + dragOffsetY);
+                    const offsetX = coords.x - (shape.points[0].x + dragOffsetX);
+                    const offsetY = coords.y - (shape.points[0].y + dragOffsetY);
                     shape.points = shape.points.map(p => ({
                         x: p.x + offsetX,
                         y: p.y + offsetY
@@ -440,39 +452,39 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
             if (currentTool === "line") {
                 ctx.beginPath();
                 ctx.moveTo(startX, startY);
-                ctx.lineTo(e.clientX, e.clientY);
+                ctx.lineTo(coords.x, coords.y);
                 ctx.stroke();
             } else if (currentTool === "rect") {
-                ctx.strokeRect(startX, startY, e.clientX - startX, e.clientY - startY);
+                ctx.strokeRect(startX, startY, coords.x - startX, coords.y - startY);
             } else if (currentTool === "arrow") {
                 ctx.beginPath();
                 ctx.moveTo(startX, startY);
-                ctx.lineTo(e.clientX, e.clientY);
+                ctx.lineTo(coords.x, coords.y);
                 ctx.stroke();
 
-                const angle = Math.atan2(e.clientY - startY, e.clientX - startX);
+                const angle = Math.atan2(coords.y - startY, coords.x - startX);
                 const headLength = 15;
 
                 ctx.beginPath();
-                ctx.moveTo(e.clientX, e.clientY);
+                ctx.moveTo(coords.x, coords.y);
                 ctx.lineTo(
-                    e.clientX - headLength * Math.cos(angle - Math.PI / 6),
-                    e.clientY - headLength * Math.sin(angle - Math.PI / 6)
+                    coords.x - headLength * Math.cos(angle - Math.PI / 6),
+                    coords.y - headLength * Math.sin(angle - Math.PI / 6)
                 );
 
-                ctx.moveTo(e.clientX, e.clientY);
+                ctx.moveTo(coords.x, coords.y);
                 ctx.lineTo(
-                    e.clientX - headLength * Math.cos(angle + Math.PI / 6),
-                    e.clientY - headLength * Math.sin(angle + Math.PI / 6)
+                    coords.x - headLength * Math.cos(angle + Math.PI / 6),
+                    coords.y - headLength * Math.sin(angle + Math.PI / 6)
                 );
                 ctx.stroke();
             } else if (currentTool === "circle") {
-                let radius = Math.sqrt((e.clientX - startX) * (e.clientX - startX) + (e.clientY - startY) * (e.clientY - startY));
+                let radius = Math.sqrt((coords.x - startX) * (coords.x - startX) + (coords.y - startY) * (coords.y - startY));
                 ctx.beginPath();
                 ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
                 ctx.stroke();
             } else if (currentTool === "pencil") {
-                coordinates.push({ x: e.clientX, y: e.clientY });
+                coordinates.push({ x: coords.x, y: e.clientY });
                 ctx.beginPath();
                 ctx.moveTo(coordinates[0].x, coordinates[0].y);
                 for (let i = 1; i < coordinates.length; i++) {
