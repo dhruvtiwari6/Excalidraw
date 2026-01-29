@@ -112,7 +112,7 @@ export default function CanvasDraw(canvas: HTMLCanvasElement, width: number, hei
     const getCanvasCoordinates = (e: PointerEvent) => {
         const rect = canvas.getBoundingClientRect();
         return {
-            x: coords.x - rect.left,
+            x: e.clientX - rect.left,
             y: e.clientY - rect.top
         };
     };
